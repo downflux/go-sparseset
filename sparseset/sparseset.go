@@ -29,11 +29,19 @@ type S[T any] struct {
 	sparse [][]int
 }
 
+func New[T any]() *S[T] {
+	return &S[T]{
+		ids:    nil,
+		data:   nil,
+		sparse: nil,
+	}
+}
+
 func (s *S[T]) Insert(x ID, data T) {
 	page, id := x.Page(), x.ID()
 
-	if len(s.sparse) <= int(page) {
-		dest := make([][]int, page)
+	if len(s.sparse) < int(page)+1 {
+		dest := make([][]int, page+1)
 		copy(dest, s.sparse)
 		// pre-allocate the 32kB page.
 		dest[page] = make([]int, sPage)
@@ -42,7 +50,7 @@ func (s *S[T]) Insert(x ID, data T) {
 
 	s.ids = append(s.ids, x)
 	s.data = append(s.data, data)
-	s.sparse[page][int(id)] = len(s.ids)
+	s.sparse[page][int(id)] = len(s.ids) - 1
 }
 
 func (s *S[T]) Remove(x ID) {
